@@ -5,12 +5,20 @@
 import Foundation
 import Combine
 
-public struct Networker:  NetworkerProtocol {
+public protocol NetworkerProtocol {
+
+	init(session: URLSession, dependency: NetworkerDependency)
+
+	func dataTask<T: Decodable>(requestable: Requestable, completion: @escaping (Result<T, Error>) -> Void)
+	func getPublisher<T: Decodable>(type: T.Type, requestable: Requestable) -> AnyPublisher<T, Error>
+}
+
+public struct Networker: NetworkerProtocol {
 
 	let session: URLSession
 	let dependency: NetworkerDependency
 
-	public init(session: URLSession = .shared, dependency: NetworkerDependency) {
+	public init(session: URLSession = .shared, dependency: NetworkerDependency = DefaultNetworkerDependency()) {
 		self.session = session
 		self.dependency = dependency
 	}
@@ -42,11 +50,5 @@ public struct Networker:  NetworkerProtocol {
 			.tryMap { try dependency.tryMap(response: $0.response, and: $0.data) }
 			.decode(type: T.self, decoder: JSONDecoder())
 			.eraseToAnyPublisher()
-	}
-
-	public enum NetworkerError: Error {
-		case noData(Error?)
-		case noResponse(Error?)
-		case baseError(Error?)
 	}
 }
