@@ -23,6 +23,11 @@ public struct Networker: NetworkerProtocol {
 		self.dependency = dependency
 	}
 
+	public init(dependency: NetworkerDependency = DefaultNetworkerDependency(), isCertificateValid: @escaping (SecTrust) -> Bool) {
+		self.dependency = dependency
+		self.session = URLSession(configuration: .default, delegate: SSLDelegate(isCertificateValid: isCertificateValid), delegateQueue: nil)
+	}
+
 	public func dataTask<T>(requestable: Requestable, completion: @escaping (Result<T, Error>) -> Void) where T : Decodable {
 
 		self.session.dataTask(with: requestable.urlRequest) { data, response, error in
