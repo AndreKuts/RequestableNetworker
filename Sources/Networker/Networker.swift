@@ -11,6 +11,7 @@ public protocol NetworkerProtocol {
 
 	func dataTask<T: Decodable>(requestable: Requestable, completion: @escaping (Result<T, Error>) -> Void)
 	func getPublisher<T: Decodable>(type: T.Type, requestable: Requestable) -> AnyPublisher<T, Error>
+	func getAsync<T: Decodable>(type: T.Type, requestable: Requestable) async throws -> T
 }
 
 public struct Networker: NetworkerProtocol {
@@ -55,5 +56,12 @@ public struct Networker: NetworkerProtocol {
 			.tryMap { try dependency.tryMap(response: $0.response, and: $0.data) }
 			.decode(type: T.self, decoder: JSONDecoder())
 			.eraseToAnyPublisher()
+	}
+
+	public func getAsync<T>(type: T.Type, requestable: Requestable) async throws -> T where T : Decodable {
+		let (data, response) = try await self.session.data(for: requestable.urlRequest)
+		let validData = try self.dependency.tryMap(response: response, and: data)
+		let parsedObject = try JSONDecoder().decode(T.self, from: validData)
+		return parsedObject
 	}
 }
