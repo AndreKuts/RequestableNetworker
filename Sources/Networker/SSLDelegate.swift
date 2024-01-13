@@ -4,7 +4,7 @@
 
 import Foundation
 
-protocol SSLPiningDelegate: URLSessionDelegate {
+public protocol SSLPiningDelegate: URLSessionDelegate {
 	init(isCertificateValid:  @escaping (SecTrust) -> Bool)
 }
 
@@ -12,7 +12,7 @@ public final class SSLDelegate: NSObject, SSLPiningDelegate {
 
 	let isCertificateValid: (SecTrust) -> Bool
 
-	init(isCertificateValid: @escaping (SecTrust) -> Bool) {
+	public init(isCertificateValid: @escaping (SecTrust) -> Bool) {
 		self.isCertificateValid = isCertificateValid
 	}
 

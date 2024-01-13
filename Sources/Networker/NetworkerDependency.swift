@@ -3,11 +3,12 @@
 //
 
 import Foundation
-import Combine
 
 public protocol NetworkerDependency {
-	func validate<T: Decodable>(response: URLResponse, andData data: Data, completion: @escaping (Result<T, Error>) -> Void)
-	func tryMap(response: URLResponse, and data: Data) throws -> Data
+
+	/// Validate response status code than try to pars data into expected type
+	func validateAndDecode<T: Decodable>(response: URLResponse, withData data: Data) throws -> T
+
 }
 
 public struct DefaultNetworkerDependency: NetworkerDependency {
@@ -18,33 +19,19 @@ public struct DefaultNetworkerDependency: NetworkerDependency {
 		self.decoder = decoder
 	}
 
-	public func validate<T>(response: URLResponse, andData data: Data, completion: @escaping (Result<T, Error>) -> Void) where T : Decodable {
-		let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+	public func validateAndDecode<T: Decodable>(response: URLResponse, withData data: Data) throws -> T {
+
+		let statusCode = response.statusCode ?? -1
 		let responseGroup = HTTPSResponseType(rawValue: statusCode)
 
-		if responseGroup == .success {
-			decode(type: T.self, data: data, completion: completion)
-		} else {
-			completion(.failure(NetworkerError.statusCodeError(statusCode)))
+		guard responseGroup != .success(code: statusCode) else {
+			throw NetworkerError.statusCodeError(statusCode, data)
 		}
-	}
 
-	public func tryMap(response: URLResponse, and data: Data) throws -> Data {
-		let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-		let responseGroup = HTTPSResponseType(rawValue: statusCode)
-		if responseGroup == .success {
-			return data
-		} else {
-			throw NetworkerError.statusCodeError(statusCode)
-		}
+		return try decoder.decode(T.self, from: data)
 	}
+}
 
-	private func decode<T: Decodable>(type: T.Type, data: Data, completion: @escaping (Result<T, Error>) -> Void) {
-		do {
-			let result = try decoder.decode(T.self, from: data)
-			completion(.success(result))
-		} catch {
-			completion(.failure(error))
-		}
-	}
+extension URLResponse {
+	var statusCode: Int? { (self as? HTTPURLResponse)?.statusCode }
 }

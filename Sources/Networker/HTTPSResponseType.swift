@@ -4,13 +4,13 @@
 
 public enum HTTPSResponseType: Equatable {
 
-	case info
-	case success
-	case redirect
-	case clientError
-	case serverError
-	case untrustedCertificate
-	case timeOut
+	case info(code: Int)
+	case success(code: Int)
+	case redirect(code: Int)
+	case clientError(code: Int)
+	case serverError(code: Int)
+	case untrustedCertificate(code: Int)
+	case timeOut(code: Int)
 	case unowned(code: Int)
 
 	public init(rawValue: Int) {
@@ -18,25 +18,25 @@ public enum HTTPSResponseType: Equatable {
 		switch rawValue {
 
 		case 100..<200:
-			self = .info
+			self = .info(code: rawValue)
 
 		case 200..<300:
-			self = .success
+			self = .success(code: rawValue)
 
 		case 300..<400:
-			self = .redirect
+			self = .redirect(code: rawValue)
 
 		case 400..<500:
-			self = .clientError
+			self = .clientError(code: rawValue)
 
 		case 500..<600:
-			self = .serverError
+			self = .serverError(code: rawValue)
 
 		case -999:
-			self = .untrustedCertificate
+			self = .untrustedCertificate(code: rawValue)
 
 		case -1001:
-			self = .timeOut
+			self = .timeOut(code: rawValue)
 
 		default:
 			self = .unowned(code: rawValue)

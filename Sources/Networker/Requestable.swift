@@ -4,79 +4,32 @@
 
 import Foundation
 
+public typealias Headers = [String : String]
+public typealias Parameters = [String : Any]
+
 public protocol Requestable {
-	var method: HttpMethod { get }
-	var endpoint: Endpoint { get }
+
+	var method: HTTPSMethod { get }
 	var headers: Headers? { get }
+	var body: Data? { get }
+	var endpoint: Endpoint { get }
+	var parameters: Parameters { get }
 	var encoder: ParametersEncoder { get }
 	var urlRequest: URLRequest { get }
 }
 
-public protocol HeadersContainable {
-	var headers: Headers { get }
-}
+public extension Requestable {
 
-public protocol BodyRequestable: Requestable {
-	var body: Data { get }
-}
+	var method: HTTPSMethod { .get }
 
-public protocol ParametersRequestable: Requestable {
-	var parameters: Parameters { get }
-}
+	var headers: Headers? { nil }
 
-public protocol FilesRequestable: Requestable {
-	var files: [String: FileProtocol] { get }
-}
+	var body: Data? { nil }
 
-public typealias Headers = [String : String]
-public typealias Parameters = [String : Any]
+	var parameters: Parameters { [:] }
 
-public enum HttpMethod: String {
-
-	case get
-	case post
-	case put
-	case patch
-	case delete
-
-	var name: String {
-		switch self {
-		case .get:
-			return "GET"
-		case .post:
-			return "POST"
-		case .put:
-			return "PUT"
-		case .patch:
-			return "PATCH"
-		case .delete:
-			return "DELETE"
-		}
+	var encoder: ParametersEncoder {
+		DefaultParametersEncoder.shared
 	}
-}
 
-public indirect enum Endpoint {
-
-	case root(url: URL)
-	case path(endpoint: Endpoint, path: String)
-
-	public var url: URL {
-		switch self {
-		case .root(let url):
-			return url
-		case .path(let endpoint, let path):
-			return endpoint.url.appendingPathComponent(path)
-		}
-	}
-}
-
-public protocol ParametersEncoder {
-	var headers: Headers? { get }
-	func encode<T: Requestable>(_ requestable: T) -> URLRequest
-}
-
-public protocol FileProtocol {
-	var data: Data { get }
-	var filename: String { get }
-	var mimeType: String? { get }
 }
