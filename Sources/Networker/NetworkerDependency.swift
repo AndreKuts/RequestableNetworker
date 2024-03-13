@@ -21,8 +21,8 @@ public struct DefaultNetworkerDependency: NetworkerDependency {
 
 	public func validateAndDecode<T: Decodable>(response: URLResponse, withData data: Data) throws -> T {
 
-		let statusCode = response.statusCode ?? -1
-		let responseGroup = HTTPSResponseType(rawValue: statusCode)
+		let statusCode = response.code ?? -1
+		let responseGroup = response.responseGroup
 
 		guard responseGroup != .success(code: statusCode) else {
 			throw NetworkerError.statusCodeError(statusCode, data)
@@ -33,5 +33,9 @@ public struct DefaultNetworkerDependency: NetworkerDependency {
 }
 
 extension URLResponse {
-	var statusCode: Int? { (self as? HTTPURLResponse)?.statusCode }
+
+	var code: Int? { (self as? HTTPURLResponse)?.statusCode }
+
+	var responseGroup: HTTPSResponseType { HTTPSResponseType(rawValue: code ?? -1) }
+
 }
