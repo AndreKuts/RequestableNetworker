@@ -32,4 +32,20 @@ public extension Requestable {
 		DefaultParametersEncoder.shared
 	}
 
+	var urlRequest: URLRequest {
+		var request = encoder.encode(self)
+		request.httpMethod = method.rawValue
+		request.allHTTPHeaderFields = makeHeaders()
+		return request
+	}
+
+	private func makeHeaders() -> [String: String] {
+		var headers = self.headers ?? [:]
+
+		for header in encoder.headers ?? [:] {
+			headers[header.key] = header.value
+		}
+
+		return headers
+	}
 }
